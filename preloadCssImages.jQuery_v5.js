@@ -4,7 +4,7 @@
  * http://www.filamentgroup.com
  * reference article: http://www.filamentgroup.com/lab/update_automatically_preload_images_from_css_with_jquery/
  * demo page: http://www.filamentgroup.com/examples/preloadImages/index_v2.php
- * 
+ *
  * Copyright (c) 2008 Filament Group, Inc
  * Dual licensed under the MIT (filamentgroup.com/examples/mit-license.txt) and GPL (filamentgroup.com/examples/gpl-license.txt) licenses.
  *
@@ -13,7 +13,7 @@
  * 	02.20.2008 initial Version 1.0
  *    06.04.2008 Version 2.0 : removed need for any passed arguments. Images load from any and all directories.
  *    06.21.2008 Version 3.0 : Added options for loading status. Fixed IE abs image path bug (thanks Sam Pohlenz).
- *    07.24.2008 Version 4.0 : Added support for @imported CSS (credit: http://marcarea.com/). Fixed support in Opera as well. 
+ *    07.24.2008 Version 4.0 : Added support for @imported CSS (credit: http://marcarea.com/). Fixed support in Opera as well.
  *    10.31.2008 Version: 5.0 : Many feature and performance enhancements from trixta
  * --------------------------------------------------------------------
  */
@@ -28,16 +28,16 @@
 	var allImgs = [],
 		loaded = 0,
 		imgUrls = [],
-		thisSheetRules,	
+		thisSheetRules,
 		errorTimer;
-	
+
 	function onImgComplete(){
 		clearTimeout(errorTimer);
 		if (imgUrls && imgUrls.length && imgUrls[loaded]) {
 			loaded++;
 			if (settings.statusTextEl) {
-				var nowloading = (imgUrls[loaded]) ? 
-					'Now Loading: <span>' + imgUrls[loaded].split('/')[imgUrls[loaded].split('/').length - 1] : 
+				var nowloading = (imgUrls[loaded]) ?
+					'Now Loading: <span>' + imgUrls[loaded].split('/')[imgUrls[loaded].split('/').length - 1] :
 					'Loading complete'; // wrong status-text bug fixed
 				jQuery(settings.statusTextEl).html('<span class="numLoaded">' + loaded + '</span> of <span class="numTotal">' + imgUrls.length + '</span> loaded (<span class="percentLoaded">' + (loaded / imgUrls.length * 100).toFixed(0) + '%</span>) <span class="currentImg">' + nowloading + '</span></span>');
 			}
@@ -48,7 +48,7 @@
 			loadImgs();
 		}
 	}
-	
+
 	function loadImgs(){
 		//only load 1 image at the same time / most browsers can only handle 2 http requests, 1 should remain for user-interaction (Ajax, other images, normal page requests...)
 		// otherwise set simultaneousCacheLoading to a higher number for simultaneous downloads
@@ -63,7 +63,7 @@
 			errorTimer = setTimeout(onImgComplete, settings.errorDelay); // handles 404-Errors in IE
 		}
 	}
-	
+
 	function parseCSS(sheets, urls) {
 		var w3cImport = false,
 			imported = [],
@@ -71,9 +71,9 @@
 			baseURL;
 		var sheetIndex = sheets.length;
 		while(sheetIndex--){//loop through each stylesheet
-			
+
 			var cssPile = '';//create large string of all css rules in sheet
-			
+
 			if(urls && urls[sheetIndex]){
 				baseURL = urls[sheetIndex];
 			} else {
@@ -85,10 +85,23 @@
 					baseURL += '/'; //tack on a / if needed
 				}
 			}
+
+			// 4/18/2013: patch added to fix firefox security error -- Jeremy Fields, Viget
+			// http://www.filamentgroup.com/lab/update_automatically_preload_images_from_css_with_jquery/#commentNumber151
+			var allowStylesheetAccess = false;
+			try {
+				if (sheets[sheetIndex].cssRules) {
+					allowStylesheetAccess = true;
+				}
+			} catch (e) {
+				var ex = e;
+			}
+			if (!allowStylesheetAccess) continue;
+
 			if(sheets[sheetIndex].cssRules || sheets[sheetIndex].rules){
 				thisSheetRules = (sheets[sheetIndex].cssRules) ? //->>> http://www.quirksmode.org/dom/w3c_css.html
 					sheets[sheetIndex].cssRules : //w3
-					sheets[sheetIndex].rules; //ie 
+					sheets[sheetIndex].rules; //ie
 				var ruleIndex = thisSheetRules.length;
 				while(ruleIndex--){
 					if(thisSheetRules[ruleIndex].style && thisSheetRules[ruleIndex].style.cssText){
@@ -100,7 +113,7 @@
 						imported.push(thisSheetRules[ruleIndex].styleSheet);
 						w3cImport = true;
 					}
-					
+
 				}
 			}
 			//parse cssPile for image urls
@@ -109,15 +122,15 @@
 				var i = tmpImage.length;
 				while(i--){ // handle baseUrl here for multiple stylesheets in different folders bug
 					var imgSrc = (tmpImage[i].charAt(0) == '/' || tmpImage[i].match('://')) ? // protocol-bug fixed
-						tmpImage[i] : 
+						tmpImage[i] :
 						baseURL + tmpImage[i];
-					
+
 					if(jQuery.inArray(imgSrc, imgUrls) == -1){
 						imgUrls.push(imgSrc);
 					}
 				}
 			}
-			
+
 			if(!w3cImport && sheets[sheetIndex].imports && sheets[sheetIndex].imports.length) {
 				for(var iImport = 0, importLen = sheets[sheetIndex].imports.length; iImport < importLen; iImport++){
 					var iHref = sheets[sheetIndex].imports[iImport].href;
@@ -128,14 +141,14 @@
 						iHref += '/'; //tack on a / if needed
 					}
 					var iSrc = (iHref.charAt(0) == '/' || iHref.match('://')) ? // protocol-bug fixed
-						iHref : 
+						iHref :
 						baseURL + iHref;
-					
+
 					importedSrc.push(iSrc);
 					imported.push(sheets[sheetIndex].imports[iImport]);
 				}
-				
-				
+
+
 			}
 		}//loop
 		if(imported.length){
